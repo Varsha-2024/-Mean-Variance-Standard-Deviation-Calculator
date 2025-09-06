@@ -1,0 +1,38 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
+import numpy as np
+
+def draw_plot():
+    # Load the data into a Pandas DataFrame
+    df = pd.read_csv('epa-sea-level.csv')
+    
+    # Create a scatter plot of the data showing Year vs CSIRO Adjusted Sea Level
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(df['Year'], df['CSIRO Adjusted Sea Level'])
+    
+    # Add a line of best fit using linear regression for all available data
+    slope, intercept, r_value, p_value, std_err = linregress(df['Year'], df['CSIRO Adjusted Sea Level'])
+    x_pred_all = np.arange(df['Year'].min(), 2051)
+    y_pred_all = intercept + slope * x_pred_all
+    ax.plot(x_pred_all, y_pred_all, 'r', label='Best fit line: all data')
+    
+    # Add a line of best fit using linear regression for data from 2000 onwards
+    df_recent = df[df['Year'] >= 2000]
+    slope_recent, intercept_recent, r_value_recent, p_value_recent, std_err_recent = linregress(
+        df_recent['Year'], df_recent['CSIRO Adjusted Sea Level'])
+    x_pred_recent = np.arange(2000, 2051)
+    y_pred_recent = intercept_recent + slope_recent * x_pred_recent
+    ax.plot(x_pred_recent, y_pred_recent, 'g', label='Best fit line: 2000 onwards')
+    
+    # Add appropriate axis labels, title, and legend
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Sea Level (inches)')
+    ax.set_title('Rise in Sea Level')
+    ax.legend()
+    
+    # Save the plot
+    fig.savefig('sea_level_plot.png')
+    
+    # Return the matplotlib.figure.Figure object
+    return fig
