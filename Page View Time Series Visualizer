@@ -1,0 +1,68 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+def draw_line_bar_scatter():
+    # Load the data into a Pandas DataFrame, parsing the 'date' column as dates and setting it as the index
+    df = pd.read_csv('fcc-forum-pageviews.csv', parse_dates=['date'], index_col='date')
+    
+    # Clean the data by removing the top and bottom 2.5% of page view data (outliers)
+    lower_bound = df['value'].quantile(0.025)
+    upper_bound = df['value'].quantile(0.975)
+    df_clean = df[(df['value'] >= lower_bound) & (df['value'] <= upper_bound)]
+    
+    # Line Plot: Show daily page views over time
+    fig1, ax1 = plt.subplots(figsize=(12, 6))
+    ax1.plot(df_clean.index, df_clean['value'], color='red', linewidth=1)
+    ax1.set_title('Daily freeCodeCamp Forum Page Views 5/2016-12/2019')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Page Views')
+    line_fig = fig1
+    line_fig.savefig('line_plot.png')
+    
+    # Bar Plot: Show the average monthly page views per year
+    df_bar = df_clean.copy()
+    df_bar['year'] = df_bar.index.year
+    df_bar['month'] = df_bar.index.month
+    df_bar_grouped = df_bar.groupby(['year', 'month'])['value'].mean().unstack()
+    
+    fig2, ax2 = plt.subplots(figsize=(10, 8))
+    df_bar_grouped.plot(kind='bar', ax=ax2)
+    ax2.set_xlabel('Years')
+    ax2.set_ylabel('Average Page Views')
+    ax2.set_title('Average Daily Page Views by Month and Year')
+    ax2.legend(title='Months', labels=['January', 'February', 'March', 'April', 'May', 'June',
+                                      'July', 'August', 'September', 'October', 'November', 'December'])
+    plt.xticks(rotation=0)
+    plt.yticks(rotation=0)
+    bar_fig = fig2
+    bar_fig.savefig('bar_plot.png')
+    
+    # Box Plot: Show page views distribution by year and by month
+    df_box = df_clean.copy()
+    df_box['year'] = df_box.index.year
+    df_box['month'] = df_box.index.month_name()
+    month_order = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    
+    fig3, (ax3, ax4) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Year-wise box plot
+    sns.boxplot(data=df_box, x='year', y='value', ax=ax3)
+    ax3.set_title('Year-wise Box Plot (Trend)')
+    ax3.set_xlabel('Year')
+    ax3.set_ylabel('Page Views')
+    
+    # Month-wise box plot
+    sns.boxplot(data=df_box, x='month', y='value', ax=ax4, order=month_order)
+    ax4.set_title('Month-wise Box Plot (Seasonality)')
+    ax4.set_xlabel('Month')
+    ax4.set_ylabel('Page Views')
+    ax4.set_xticklabels(ax4.get_xticklabels(), rotation=45)
+    
+    box_fig = fig3
+    box_fig.savefig('box_plot.png')
+    
+    # Return the three matplotlib.figure.Figure objects
+    return line_fig, bar_fig, box_fig
